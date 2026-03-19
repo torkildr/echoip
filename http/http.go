@@ -35,6 +35,7 @@ type Server struct {
 	gr         geo.Reader
 	profile    bool
 	Sponsor    bool
+	NoCustomIP bool
 }
 
 type Response struct {
@@ -129,7 +130,7 @@ func userAgentFromRequest(r *http.Request) *useragent.UserAgent {
 }
 
 func (s *Server) newResponse(r *http.Request) (Response, error) {
-	ip, err := ipFromRequest(s.IPHeaders, r, true)
+	ip, err := ipFromRequest(s.IPHeaders, r, !s.NoCustomIP)
 	if err != nil {
 		return Response{}, err
 	}
@@ -193,7 +194,7 @@ func (s *Server) newPortResponse(r *http.Request) (PortResponse, error) {
 }
 
 func (s *Server) CLIHandler(w http.ResponseWriter, r *http.Request) *appError {
-	ip, err := ipFromRequest(s.IPHeaders, r, true)
+	ip, err := ipFromRequest(s.IPHeaders, r, !s.NoCustomIP)
 	if err != nil {
 		return badRequest(err).WithMessage(err.Error()).AsJSON()
 	}
@@ -364,6 +365,7 @@ func (s *Server) DefaultHandler(w http.ResponseWriter, r *http.Request) *appErro
 		Port           bool
 		Sponsor        bool
 		ExplicitLookup bool
+		NoCustomIP     bool
 	}{
 		response,
 		r.Host,
@@ -374,7 +376,8 @@ func (s *Server) DefaultHandler(w http.ResponseWriter, r *http.Request) *appErro
 		string(json),
 		s.LookupPort != nil,
 		s.Sponsor,
-		r.URL.Query().Has("ip"),
+		!s.NoCustomIP && r.URL.Query().Has("ip"),
+		s.NoCustomIP,
 	}
 	if err := t.Execute(w, &data); err != nil {
 		return internalServerError(err)

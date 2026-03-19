@@ -142,6 +142,7 @@ Usage of echoip:
         Path to GeoIP country database
   -l string
         Listening address (default ":8080")
+  -L    Disable custom IP lookup
   -p    Enable port lookup
   -r    Perform reverse hostname lookups
   -s    Show sponsor logo
